@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Finammon</string>
+    <string name="facebook_app_id">289380684886628</string>
+    <string name="fb_login_protocol_scheme">fb289380684886628</string>
+
+    <string name="login_failed_messege">Login failed</string>
+    <string name="authentication_failed_messege">Authentication failed</string>
+</resources>

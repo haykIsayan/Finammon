@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "96346501086",
+    "firebase_url": "https://furinomma.firebaseio.com",
+    "project_id": "furinomma",
+    "storage_bucket": "furinomma.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:96346501086:android:9e95def22d011f88",
+        "android_client_info": {
+          "package_name": "com.hisayan.fbase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "96346501086-mqipgij1sur7jb4cpdetkdvpvmobi3mn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfTpSW6RYCjRWRrYl9177zV3Lq7pET_SY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
