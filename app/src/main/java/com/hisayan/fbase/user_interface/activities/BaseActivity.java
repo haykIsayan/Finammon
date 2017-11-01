@@ -12,14 +12,15 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(getLayoutResource());
     }
 
 
+    //setup a connection with the resource layout xml file
     abstract void connectXML();
 
 
+    //setup the main logic of the activity
     abstract void setOperations();
 
 

@@ -1,5 +1,7 @@
 package com.hisayan.fbase.objects;
 
+import com.google.firebase.auth.FirebaseUser;
+
 /**
  * Created by hisayan on 10/29/17.
  */
@@ -10,15 +12,21 @@ public class User {
     private String id;
     private String displayName;
     private String image;
+    private boolean online;
 
 
     //contructors
-    public User(){}
+    public User(){
 
-    public User(String id, String displayName, String image) {
+        this.image = "";
+
+    }
+
+    public User(String id, String displayName, String image, boolean online) {
         this.id = id;
         this.displayName = displayName;
         this.image = image;
+        this.online = online;
     }
 
 
@@ -52,4 +60,12 @@ public class User {
         this.image = image;
     }
 
+
+    public boolean isOnline() {
+        return online;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
+    }
 }

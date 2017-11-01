@@ -1,12 +1,17 @@
 package com.hisayan.fbase.user_interface.activities;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -21,25 +26,26 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.hisayan.fbase.authentication.FacebookAuthDelegate;
+import com.hisayan.fbase.authentication.FacebookAuthService;
 import com.hisayan.fbase.storage.FBDatabaseHelper;
 import com.hisayan.fbase.R;
 import com.hisayan.fbase.objects.User;
 
 
-public class LoginActivity extends BaseActivity {
+public class LoginActivity extends BaseActivity implements View.OnClickListener, FacebookAuthDelegate {
 
     //widgets
-    private TextView textView;
+    private ImageView ivUserPhoto;
 
-    private ImageView imageView;
+    private TextView tvUserDisplayName;
 
     private LoginButton lbLoginWithFacebook;
 
-    //variables
-    private FirebaseAuth mFireBaseAuth;
-    private CallbackManager mCallbackManager;
+    private Button bShowOnlineUsers;
 
-    private FBDatabaseHelper mFBDatabaseHelper;
+    //variables
+    private FacebookAuthService mFacebookAuthService;
 
 
     @Override
@@ -58,112 +64,62 @@ public class LoginActivity extends BaseActivity {
     protected void onStart() {
         super.onStart();
 
-        FirebaseUser firebaseUser = mFireBaseAuth.getCurrentUser();
+        FirebaseUser firebaseUser = mFacebookAuthService.getFirebaseAuth().getCurrentUser();
 
-        if (firebaseUser != null)
+        if (firebaseUser != null) {
 
-            textView.setText(firebaseUser.getDisplayName());
+            updateUserInterface(new User(
+                    firebaseUser.getUid(),
+                    firebaseUser.getDisplayName(),
+                    firebaseUser.getPhotoUrl().toString(),
+                    true));
 
-        else
-            textView.setText(null);
-        
+
+        }
+
     }
 
 
-    //setup a connection with the resource layout xml file
     @Override
     void connectXML() {
 
-        textView = (TextView) findViewById(R.id.textview);
+        ivUserPhoto = (ImageView) findViewById(R.id.iv_user_photo_activity_login);
 
-        imageView = (ImageView) findViewById(R.id.imageview_bitch);
+        tvUserDisplayName = (TextView) findViewById(R.id.tv_user_display_name_activity_login);
 
         lbLoginWithFacebook = (LoginButton) findViewById(R.id.lb_login_with_facebook_activity_login);
+
+        bShowOnlineUsers = (Button) findViewById(R.id.b_show_online_users_activty_login);
 
     }
 
 
-    //setup the main logic of the activity
     @Override
     void setOperations() {
 
         FacebookSdk.sdkInitialize(getApplicationContext());
 
-        mFBDatabaseHelper = new FBDatabaseHelper();
+        mFacebookAuthService = new FacebookAuthService(this.lbLoginWithFacebook);
 
-        mFireBaseAuth = FirebaseAuth.getInstance();
+        mFacebookAuthService.setFacebookAuthDelegate(this);
 
-        mCallbackManager = CallbackManager.Factory.create();
+        mFacebookAuthService.login();
 
-        loginWithFacebook();
+        mFacebookAuthService.trackAccessToken();
 
-    }
-
-
-    //setup the necessary conditions for a facebook login
-    private void loginWithFacebook(){
-
-        lbLoginWithFacebook.setReadPermissions("email","public_profile");
-
-        lbLoginWithFacebook.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-
-                authenticateUser(loginResult.getAccessToken());
-
-            }
-
-            @Override
-            public void onCancel() {
-
-            }
-
-            @Override
-            public void onError(FacebookException error) {
-
-                Toast.makeText(LoginActivity.this, getResources().getText(R.string.login_failed_messege), Toast.LENGTH_LONG).show();
-
-            }
-
-        });
+        bShowOnlineUsers.setOnClickListener(this);
 
     }
 
 
-    //login to Firebase with the credentials obtained from the facebook login
-    private void authenticateUser(AccessToken accessToken){
+    //Updates the user interface with information on the current user
+    private void updateUserInterface(User user){
 
-        AuthCredential authCredential = FacebookAuthProvider.getCredential(accessToken.getToken());
+        Log.d("LoginActivty","updateUserInterface called");
 
-        mFireBaseAuth.signInWithCredential(authCredential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
+        Glide.with(this).load(Uri.parse(user.getImage())).placeholder(R.drawable.profile_placeholder).into(ivUserPhoto);
 
-                if (task.isSuccessful()) {
-
-                    FirebaseUser firebaseUser = mFireBaseAuth.getCurrentUser();
-
-                    User user = new User();
-
-                    user.setDisplayName(firebaseUser.getDisplayName());
-                    user.setImage(firebaseUser.getPhotoUrl().toString());
-
-                    mFBDatabaseHelper.addUser(user);
-
-                    Intent intent = new Intent(LoginActivity.this,UserListActivity.class);
-
-                    startActivity(intent);
-
-
-                } else {
-                    // If sign in fails, display a message to the user.
-
-                    Toast.makeText(LoginActivity.this, getResources().getText(R.string.authentication_failed_messege), Toast.LENGTH_LONG).show();
-                }
-
-            }
-        });
+        tvUserDisplayName.setText(user.getDisplayName());
 
     }
 
@@ -172,13 +128,47 @@ public class LoginActivity extends BaseActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        mCallbackManager.onActivityResult(requestCode, resultCode, data);
+        mFacebookAuthService.getCallbackManager().onActivityResult(requestCode, resultCode, data);
+
     }
 
 
     @Override
     int getLayoutResource() {
         return R.layout.activity_login;
+    }
+
+
+    @Override
+    public void onClick(View view) {
+
+        Intent intent = new Intent(this, UserListActivity.class);
+
+        startActivity(intent);
+
+    }
+
+
+    //implementing DacebookAuthService
+    @Override
+    public void onAuthComplete(User user) {
+
+        updateUserInterface(user);
+
+    }
+
+    @Override
+    public void onAuthFailed() {
+
+        Toast.makeText(this,getResources().getText(R.string.authentication_failed_messege),Toast.LENGTH_LONG).show();
+
+    }
+
+    @Override
+    public void onLogout() {
+
+        updateUserInterface(new User());
+
     }
 
 }

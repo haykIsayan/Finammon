@@ -20,8 +20,8 @@ public class FBDatabaseHelper {
     //fields
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference databaseReference;
+    private FBDatabaseDelegate fbDatabaseDelegate;
 
-    private ArrayList<User> users;
 
     //constructor
     public FBDatabaseHelper() {
@@ -30,24 +30,70 @@ public class FBDatabaseHelper {
 
         databaseReference = firebaseDatabase.getReference();
 
-        users = new ArrayList<>();
-
     }
 
 
+    //adds the provided user to the realtime database
     public void addUser(User user){
 
-        String id = databaseReference.push().getKey();
-
-        user.setId(id);
-
-        databaseReference.child(id).setValue(user);
+        databaseReference.child(user.getId()).setValue(user);
 
     }
 
 
-    public DatabaseReference getDatabaseReference() {
-        return databaseReference;
+    //identifies and sends all the online users using FBDatabase delegate
+    public void getOnlineUsers(){
+
+        final ArrayList<User> users = new ArrayList<>();
+
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot onlineUserSnapshot : dataSnapshot.getChildren()){
+
+                    User user = onlineUserSnapshot.getValue(User.class);
+
+                    if (user.isOnline())
+
+                        users.add(onlineUserSnapshot.getValue(User.class));
+
+                    fbDatabaseDelegate.getOnlineUsers(users);
+
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+
+        });
+
     }
 
+
+    //updates the user with the provided id
+    public void updateUser(final User user){
+
+        Log.d("FBDatabaseHelper","updateUser called");
+
+        databaseReference.child(user.getId()).setValue(user);
+
+    }
+
+
+    //delegate
+    public interface FBDatabaseDelegate{
+
+         void getOnlineUsers(ArrayList<User> users);
+
+    }
+
+
+    //setter
+    public void setFbDatabaseDelegate(FBDatabaseDelegate fbDatabaseDelegate) {
+        this.fbDatabaseDelegate = fbDatabaseDelegate;
+    }
 }

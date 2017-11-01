@@ -3,6 +3,8 @@
     <string name="facebook_app_id">289380684886628</string>
     <string name="fb_login_protocol_scheme">fb289380684886628</string>
 
+    <string name="show_online_users_button_text">Show all online users</string>
+
     <string name="login_failed_messege">Login failed</string>
     <string name="authentication_failed_messege">Authentication failed</string>
 </resources>

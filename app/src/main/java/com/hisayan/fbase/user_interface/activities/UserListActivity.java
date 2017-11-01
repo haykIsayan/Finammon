@@ -16,6 +16,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.hisayan.fbase.R;
+import com.hisayan.fbase.authentication.FacebookAuthService;
 import com.hisayan.fbase.objects.User;
 import com.hisayan.fbase.storage.FBDatabaseHelper;
 import com.hisayan.fbase.user_interface.adapters.UserListAdapter;
@@ -23,22 +24,15 @@ import com.hisayan.fbase.user_interface.adapters.UserListAdapter;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-public class UserListActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener{
+public class UserListActivity extends BaseActivity implements FBDatabaseHelper.FBDatabaseDelegate{
 
 
     //widgets
-    private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
 
-
     //variables
-    private FirebaseAuth mFirebaseAuth;
-
     private FBDatabaseHelper mFBDatabaseHelper;
-
     private UserListAdapter mUserListAdapter;
-
-    private ArrayList<User> userList;
 
 
     @Override
@@ -56,7 +50,6 @@ public class UserListActivity extends BaseActivity implements SwipeRefreshLayout
     @Override
     void connectXML() {
 
-       // mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout_activity_user_list);
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view_activity_user_list);
 
     }
@@ -67,39 +60,17 @@ public class UserListActivity extends BaseActivity implements SwipeRefreshLayout
 
         mFBDatabaseHelper = new FBDatabaseHelper();
 
-        userList = new ArrayList<>();
+        mFBDatabaseHelper.setFbDatabaseDelegate(this);
 
-        mFBDatabaseHelper.getDatabaseReference()
-                .addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                for(DataSnapshot userSnapshot : dataSnapshot.getChildren()){
-
-                    userList.add(userSnapshot.getValue(User.class));
-
-                    Log.d("User",userSnapshot.getValue(User.class).getDisplayName());
-
-                }
-
-                buildRecyclerView();
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-
-        });
+        mFBDatabaseHelper.getOnlineUsers();
 
     }
 
 
     //builds recycler view
-    private void buildRecyclerView(){
+    private void buildRecyclerView(ArrayList<User> users){
 
-        mUserListAdapter = new UserListAdapter(this,userList);
+        mUserListAdapter = new UserListAdapter(this,users);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false));
 
@@ -115,10 +86,9 @@ public class UserListActivity extends BaseActivity implements SwipeRefreshLayout
 
 
     @Override
-    public void onRefresh() {
-        mSwipeRefreshLayout.setRefreshing(false);
+    public void getOnlineUsers(ArrayList<User> users) {
 
-        userList.clear();
+        buildRecyclerView(users);
 
     }
 }
